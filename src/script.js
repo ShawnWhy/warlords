@@ -1,3 +1,35 @@
+// putin 
+
+// ball parent
+// putin.children[0].children[0].children[0].children[3]
+
+// putin head
+// putin.children[0].children[0].children[0].children[1]
+
+// putin tank
+
+// putin.children[0].children[0].children[6]
+
+// prigozhin
+
+// ball parent
+
+
+// prigozhin.children[0]
+
+// prigozhin ball parent
+
+// prigozhin.children[0].children[0].children[0].children[2]
+
+// prigozhin head
+
+// prigozhin.children[0].children[0].children[0].children[0].children[0]
+
+// progozhin tank
+
+// prigozhin.children[0].children[0].children[8]
+
+
 import './style.css'
 import * as THREE from 'three'
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js'
@@ -7,30 +39,49 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import {SphereGeometry, TextureLoader , CubeTextureLoader} from 'three'
 import $ from "./Jquery"
 import gsap from "gsap";
+import CANNON, { Sphere } from 'cannon'
 // import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js'
 // import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
+// cannon physics
+const world = new CANNON.World()
+world.broadphase = new CANNON.SAPBroadphase(world)
+world.allowSleep = true
+world.gravity.set(0, - 9.82, 0)
+//individual materials 
+const defaultMaterial = new CANNON.Material('default')
 
 const textureLoader = new THREE.TextureLoader()
-var audioCup = new Audio('/mug.wav');
-var audioPlay = new Audio('/korob.mp3');
-var audioClick = new Audio('/click.wav');
-audioPlay.volume=.04
-audioPlay.loop=true
-audioPlay.playbackRate=.5
-audioCup.volume=.5
+var audioHit = new Audio('/mug.wav');
+audioHit.volume = .5
+
+const defaultContactMaterial = new CANNON.ContactMaterial(
+    defaultMaterial,
+    defaultMaterial,
+    {
+        friction: 30,
+        restitution: 0.1
+    }
+)
+//play sound on collision 
+const playHitSound = (collision) => {
+    const impactStrength = collision.contact.getImpactVelocityAlongNormal()
+
+    if (impactStrength > 10) {
+        audioHit.volume = Math.random()
+        audioHit.currentTime = 0
+        audioHit.play()
+    }
+}
+
+
 // Canvas
 const canvas = document.querySelector('canvas.webgl')
 // Scene
 const scene = new THREE.Scene()
-const portfolioButton=document.getElementsByClassName("portfolio");
-const aboutButton = document.getElementsByClassName("about")
-const  contactButton = document.getElementsByClassName("contact")
-const  newsButton = document.getElementsByClassName("news")
 //raycaster
 const raycaster = new THREE.Raycaster()
 const objectsToUpdate = []
-// Create sphere
-const sphereGeometry = new THREE.SphereGeometry(1, 8, 8)
+
 /**
  * Sizes
  */
@@ -38,8 +89,6 @@ const sphereGeometry = new THREE.SphereGeometry(1, 8, 8)
     width: window.innerWidth,
     height: window.innerHeight
 }
-
-
 
 window.addEventListener('resize', () =>
 {
@@ -66,112 +115,94 @@ window.addEventListener('resize', () =>
         }
 })
 
-const teaTexture= textureLoader.load('/UVimage.png')
-const headTexture= textureLoader.load('/skin.jpg')
-teaTexture.flipY = false
-headTexture.flipY= false
-const teaMaterial = new THREE.MeshBasicMaterial({map:teaTexture})
-const headMaterial = new THREE.MeshBasicMaterial({map:headTexture})
+
 const mouse = new THREE.Vector2()
 mouse.x = null
 mouse.y=null
 
-$(".button").click((e)=>{
-    console.log("clock")
-    e.preventDefault();
-    e.stopPropagation();
 
-    $(".monitor").removeClass("invisibleP")
-    $(".menue").addClass("invisibleP")
-    var ButtonName = $(e.target).attr("name")
-    switch(ButtonName){
-        case "portfolio":
-            $(".display").html(portfolio)
-            break;
-            case "contact":
-            $(".display").html(contact)
-            break;
-            case "about":
-            $(".display").html(about)
-            break;
-            case "news":
-                $(".display").html(news)
-                break;
-    }
-})
-
-$(".xButton").click((e)=>{
-    e.preventDefault();
-    e.stopPropagation();
-    $(".monitor").addClass("invisibleP")
-    $(".menue").removeClass("invisibleP")
-})
-
-$(".play").click((e)=>{  
-    e.preventDefault();
-    e.stopPropagation(); 
-   $(".play").addClass("invisibleP")
-   $(".stop").removeClass("invisibleP")
-   gsap.to(teaset.children[8].rotation,{duration:1,x:Math.PI*.25})
-   gsap.to(teaset.children[8].position,{duration:1,z:1.5})
-   gsap.to(teaset.children[8].position,{duration:1,y:.4})
-   setTimeout(() => {
-    audioClick.play()
-   }, 1000);
-   setTimeout(() => {
-    dance="on"
-    audioPlay.play()
-   }, 1500);
-})
-$(".stop").click((e)=>{
-    e.preventDefault();
-    e.stopPropagation(); 
-   $(".play").removeClass("invisibleP")
-   $(".stop").addClass("invisibleP")
-   gsap.to(teaset.children[8].rotation,{duration:.5,x:Math.PI*0})
-   gsap.to(teaset.children[8].position,{duration:.5,z:.7})
-   gsap.to(teaset.children[8].position,{duration:.5,y:.2})
-   setTimeout(() => {
-    audioClick.play()
-   }, 800);
-   setTimeout(() => {
-    gsap.to( teaset.children[5].position,{duration:.3,y:-1.45})
-    gsap.to( teaset.children[12].position,{duration:.3,y:-1.45})
-    gsap.to( teaset.children[11].position,{duration:.3,y:.8})
-    gsap.to( teaset.children[1].rotation,{duration:.6,y:0})
-    audioPlay.pause()
-    dance="off"   
-   }, 1500);
-})
 window.addEventListener('mousemove', (event) =>
 {
     mouse.x = event.clientX / sizes.width * 2 - 1
     mouse.y = - (event.clientY / sizes.height) * 2 + 1
     // console.log(mouse)
 })
-/**
- * Models
- */
-// const dracoLoader = new DRACOLoader()
-// dracoLoader.setDecoderPath('/draco/')
+
 
 const gltfLoader = new GLTFLoader()
-// gltfLoader.setDRACOLoader(dracoLoader)
 let putinMix = null;
-let prigzhinMix = null;
+let prigozhinMix = null;
 let putinBob = null;
-let priozhinBob = null;
+let prigozhinBob = null;
+let prigozhWheel = null;
+let putinwheel = null;
 let putin = null;
 let prigozhin = null;
+
+const createBall = (radius, position) => {
+    const spherecolor = function getRandomColor() {
+        var letters = '0123456789ABCDEF';
+        var color = '#';
+        for (var i = 0; i < 6; i++) {
+            color += letters[Math.floor(Math.random() * 16)];
+        }
+        return color;
+    }
+
+    console.log("fire")
+    const sphereMaterial = new THREE.MeshStandardMaterial({ emissive: spherecolor() })
+
+    // Three.js mesh
+
+    const mesh = new THREE.Mesh(star, sphereMaterial)
+    mesh.scale.set(radius, radius, radius)
+    mesh.rotation.y = Math.PI * .5
+    mesh.position.copy(position)
+    scene.add(mesh)
+
+    // Cannon.js body
+    const shape = new CANNON.Sphere(radius)
+
+    const body = new CANNON.Body({
+        mass: radius,
+        position: new CANNON.Vec3(0, 5, 0),
+        shape: shape,
+        material: defaultMaterial
+    })
+    body.position.copy(position)
+    body.applyForce(new CANNON.Vec3(- 2000, -500, 0), body.position)
+    body.addEventListener('collide', playHitSound)
+
+    world.addBody(body)
+
+    // Save in objects
+    objectsToUpdate.push({ mesh, body })
+}
 
 gltfLoader.load(
     '/putin.glb',
     (gltf) =>
     {
         putin=gltf.scene
+        console.log("putin")
+        console.log(putin)
         // console.log(teaset)
         putin.scale.set(0.25, 0.25, 0.25)
         putin.rotation.y =  Math.PI * 0.5
+        putinMix = new THREE.AnimationMixer(putin)
+
+        putinwheel = putinMix.clipAction(gltf.animations[2])
+
+        putinBob = putinMix.clipAction(gltf.animations[3])
+        // console.log(walk)
+        putinwheel.timeScale = 5
+        putinwheel.clampWhenFinished = false
+
+        // putinwheel.play()
+        putinBob.play()
+
+
+
 
         scene.add(putin)
   
@@ -182,8 +213,21 @@ gltfLoader.load(
     '/prigozhin.glb',
     (gltf) => {
         prigozhin = gltf.scene
+        console.log("prigozhin")
+        console.log(prigozhin);
         // console.log(teaset)
         prigozhin.rotation.y = Math.PI * 0.5
+        prigozhinMix = new THREE.AnimationMixer(prigozhin)
+        // console.log(mixer)
+        prigozhWheel = prigozhinMix.clipAction(gltf.animations[2])
+
+        prigozhinBob = prigozhinMix.clipAction(gltf.animations[1])
+        // console.log(walk)
+        prigozhWheel.timeScale = 5
+        prigozhWheel.clampWhenFinished = false
+            // prigozhWheel.play()
+
+        prigozhinBob.play()
 
         prigozhin.scale.set(0.25, 0.25, 0.25)
         scene.add(prigozhin)
@@ -265,34 +309,7 @@ renderer.setClearColor( 'orange',.5);
 renderer.setSize(sizes.width, sizes.height)
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 raycaster.setFromCamera(mouse, camera)
-$(portfolioButton).mouseover(()=>{
-    // teaset.children[1].position.y=-1;
-    // teaset.children[1].rotation.x=-.05*Math.PI
-    gsap.to( teaset.children[1].rotation,{duration:.3,x:-.05*Math.PI})
-})
-$(aboutButton).mouseover(()=>{  
 
-    gsap.to( teaset.children[5].position,{duration:.3,y:-.5})
-    gsap.to( teaset.children[12].position,{duration:.3,y:-.5})
-})
-$(contactButton).mouseover(()=>{
-    gsap.to( teaset.children[11].position,{duration:.3,y:1})
-})
-$(newsButton).mouseover(()=>{
-    gsap.to( teaset.children[9].position,{duration:.3,y:1})
-})
-
-$(".button").mouseout(()=>{
-    gsap.to( teaset.children[5].position,{duration:.3,y:-1.45})
-    gsap.to( teaset.children[12].position,{duration:.3,y:-1.45})
-    gsap.to( teaset.children[1].rotation,{duration:.3,x:0})
-    gsap.to( teaset.children[11].position,{duration:.3,y:.8})
-    gsap.to( teaset.children[9].position,{duration:.3,y:.02})
-    gsap.to( teaset.children[1].rotation,{duration:.3,y:0})
-    setTimeout(() => {
-        audioCup.play()
-    }, 100);
-})
 /**
  * Animate
  */
@@ -315,9 +332,9 @@ const tick = () =>
         object.mesh.quaternion.copy(object.body.quaternion)
         // object.body.applyForce(new CANNON.Vec3(- 10, 0, 0), object.body.position)
     }
-    if(prigzhinMix)
+    if(prigozhinMix)
     {
-        prigzhinMix.update(deltaTime)
+        prigozhinMix.update(deltaTime)
     }
 
     if (putinMix) {
