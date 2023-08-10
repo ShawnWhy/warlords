@@ -139,6 +139,13 @@ let putinwheel = null;
 let putin = null;
 let prigozhin = null;
 
+let prigozhinHead;
+let putinHead;
+let prigozhinBall;
+let putinBall;
+let prigozhinTank;
+let putinTank;
+
 const createBall = (radius, position) => {
     const spherecolor = function getRandomColor() {
         var letters = '0123456789ABCDEF';
@@ -190,22 +197,21 @@ gltfLoader.load(
         putin.scale.set(0.25, 0.25, 0.25)
         putin.rotation.y =  Math.PI * 0.5
         putinMix = new THREE.AnimationMixer(putin)
-
+        putinTank = putin.children[0].children[0].children[6]
+        putinHead = putin.children[0].children[0].children[0].children[1].children[0]
+        putinBall = putin.children[0].children[0].children[0].children[3]
         putinwheel = putinMix.clipAction(gltf.animations[2])
-
         putinBob = putinMix.clipAction(gltf.animations[3])
+        console.log(putinHead)
+        console.log(putinTank)
+        console.log(putinBall)
         // console.log(walk)
         putinwheel.timeScale = 5
         putinwheel.clampWhenFinished = false
 
         // putinwheel.play()
         putinBob.play()
-
-
-
-
         scene.add(putin)
-  
     }
 )
 
@@ -220,8 +226,14 @@ gltfLoader.load(
         prigozhinMix = new THREE.AnimationMixer(prigozhin)
         // console.log(mixer)
         prigozhWheel = prigozhinMix.clipAction(gltf.animations[2])
-
         prigozhinBob = prigozhinMix.clipAction(gltf.animations[1])
+
+        prigozhinBall = prigozhin.children[0].children[0].children[0].children[2]
+        prigozhinTank = prigozhin.children[0].children[0].children[8]
+        prigozhinHead = prigozhin.children[0].children[0].children[0].children[0].children[0]
+        console.log(prigozhinBall)
+        console.log(prigozhinHead)
+        console.log(prigozhinTank)
         // console.log(walk)
         prigozhWheel.timeScale = 5
         prigozhWheel.clampWhenFinished = false
