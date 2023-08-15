@@ -125,7 +125,6 @@ window.addEventListener('mousemove', (event) =>
 {
     mouse.x = event.clientX / sizes.width * 2 - 1
     mouse.y = - (event.clientY / sizes.height) * 2 + 1
-    // console.log(mouse)
 })
 
 
@@ -145,6 +144,10 @@ let prigozhinBall;
 let putinBall;
 let prigozhinTank;
 let putinTank;
+let prigozhinHeadIntersect;
+let putinHeadIntersect;
+let prigozhinTankIntersect;
+let putinTankIntersect;
 
 const createBall = (radius, position) => {
     const spherecolor = function getRandomColor() {
@@ -210,7 +213,7 @@ gltfLoader.load(
         putinwheel.clampWhenFinished = false
 
         // putinwheel.play()
-        putinBob.play()
+        // putinBob.play()
         scene.add(putin)
     }
 )
@@ -239,7 +242,7 @@ gltfLoader.load(
         prigozhWheel.clampWhenFinished = false
             // prigozhWheel.play()
 
-        prigozhinBob.play()
+        // prigozhinBob.play()
 
         prigozhin.scale.set(0.25, 0.25, 0.25)
         scene.add(prigozhin)
@@ -258,6 +261,48 @@ const RoomMap = cubeTextureLoader.load([
     './pz.png',
     './nz.png'
 ])
+
+$(canvas).click((e) => {
+    // console.log(portalGroup)
+    e.preventDefault()
+    e.stopPropagation()
+    putinHead.children[2].material = new THREE.MeshBasicMaterial({ color: "red" })
+
+    // prigozhinBob.play()
+    // putinBob.play()
+
+
+    if (prigozhinHeadIntersect.length > 0) {
+        console.log(prigozhinHead)
+        console.log("prig head")
+        prigozhinBob.play()
+
+    }
+    if (prigozhinTankIntersect.length > 0) {
+        console.log(prigozhinTank)
+
+        console.log("prig tank")
+
+        prigozhWheel.play()
+
+    }
+    if (putinHeadIntersect.length > 0) {
+
+
+        console.log("putin head")
+
+        putinBob.play()
+
+    }
+    if (putinTankIntersect.length > 0) {
+        console.log(putinTank)
+        console.log("prig tank")
+
+        putinTank.play()
+
+    }
+
+})
 
 scene.background = RoomMap;
 /**
@@ -308,16 +353,7 @@ controls.enableDamping = true
 const renderer = new THREE.WebGLRenderer({
     canvas: canvas
 })
-
-// const effectComposer = new EffectComposer(renderer)
-// effectComposer.setSize(sizes.width, sizes.height)
-// effectComposer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
-
-// const renderPass = new RenderPass(scene, camera)
-// effectComposer.addPass(renderPass)
 renderer.setClearColor( 'orange',.5);
-// renderer.shadowMap.enabled = true
-// renderer.shadowMap.type = THREE.PCFSoftShadowMap
 renderer.setSize(sizes.width, sizes.height)
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 raycaster.setFromCamera(mouse, camera)
@@ -352,6 +388,36 @@ const tick = () =>
     if (putinMix) {
         putinMix.update(deltaTime)
     }
+
+    if (prigozhinHead != null){
+        
+        prigozhinHeadIntersect = raycaster.intersectObjects(prigozhinHead.children[2])
+        
+    }
+    if (putinHead != null){
+        putinHeadIntersect = raycaster.intersectObject(putinHead.children[2])
+        }
+    if (prigozhinTank != null)
+    {
+        prigozhinTankIntersect = raycaster.intersectObject(prigozhinTank)
+        // prigozhinTank.material=new THREE.MeshBasicMaterial({color:"blue"})
+
+    }
+
+    if(putinTank != null){
+
+        putinTankIntersect = raycaster.intersectObject(putinTank)
+        if(putinTankIntersect.length>0){
+            // putinTank.material = new THREE.MeshBasicMaterial({ color: "blue" })
+
+        }
+
+
+    }
+
+    
+
+    
     controls.update()
     renderer.render(scene, camera)
     // effectComposer.render(scene, camera)
