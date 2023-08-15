@@ -148,6 +148,15 @@ let prigozhinHeadIntersect;
 let putinHeadIntersect;
 let prigozhinTankIntersect;
 let putinTankIntersect;
+// const material = new THREE.MeshBasicMaterial({ color: "blue" });
+
+// const geometry = new THREE.BoxGeometry(1, 1, 1);
+
+// // Create a cube mesh with the geometry and material
+// const cube = new THREE.Mesh(geometry, material);
+
+// // Add the cube to the scene
+// scene.add(cube);
 
 const createBall = (radius, position) => {
     const spherecolor = function getRandomColor() {
@@ -205,9 +214,9 @@ gltfLoader.load(
         putinBall = putin.children[0].children[0].children[0].children[3]
         putinwheel = putinMix.clipAction(gltf.animations[2])
         putinBob = putinMix.clipAction(gltf.animations[3])
-        console.log(putinHead)
-        console.log(putinTank)
-        console.log(putinBall)
+        // console.log(putinHead)
+        // console.log(putinTank)
+        // console.log(putinBall)
         // console.log(walk)
         putinwheel.timeScale = 5
         putinwheel.clampWhenFinished = false
@@ -234,9 +243,9 @@ gltfLoader.load(
         prigozhinBall = prigozhin.children[0].children[0].children[0].children[2]
         prigozhinTank = prigozhin.children[0].children[0].children[8]
         prigozhinHead = prigozhin.children[0].children[0].children[0].children[0].children[0]
-        console.log(prigozhinBall)
-        console.log(prigozhinHead)
-        console.log(prigozhinTank)
+        // console.log(prigozhinBall)
+        // console.log(prigozhinHead)
+        // console.log(prigozhinTank)
         // console.log(walk)
         prigozhWheel.timeScale = 5
         prigozhWheel.clampWhenFinished = false
@@ -262,11 +271,67 @@ const RoomMap = cubeTextureLoader.load([
     './nz.png'
 ])
 
+
+
+scene.background = RoomMap;
+/**
+ * Lights
+ */
+const ambientLight = new THREE.AmbientLight('orange', .5)
+scene.add(ambientLight)
+const directionalLight = new THREE.DirectionalLight('#F5F5DC', 2)
+directionalLight.castShadow = true
+directionalLight.shadow.mapSize.set(1024, 1024)
+directionalLight.shadow.camera.far = 15
+directionalLight.shadow.camera.left = - 7
+directionalLight.shadow.camera.top = 7
+directionalLight.shadow.camera.right = 7
+directionalLight.shadow.camera.bottom = - 7
+directionalLight.position.set(- 5, 5, 0)
+scene.add(directionalLight)
+const directionalLight2 = new THREE.DirectionalLight('#5F9EA0', 1)
+directionalLight2.castShadow = true
+directionalLight2.shadow.mapSize.set(1024, 1024)
+directionalLight2.shadow.camera.far = 15
+directionalLight2.shadow.camera.left = - 7
+directionalLight2.shadow.camera.top = 7
+directionalLight2.shadow.camera.right = 7
+directionalLight2.shadow.camera.bottom = - 7
+directionalLight2.position.set(5, 5, 0)
+scene.add(directionalLight2)
+
+const camera = new THREE.PerspectiveCamera(75, sizes.width / sizes.height, 1, 100)
+camera.focus=20
+if(sizes.width>860){
+camera.position.set(7, 5, 1)
+}
+else if (sizes.width>450){
+    camera.position.set(7,3,1)
+}
+else{
+    camera.position.set(9, 4, 1)
+}
+scene.add(camera)
+// Controls
+const controls = new OrbitControls(camera, canvas)
+// controls.target.set(4, 2, 0)
+controls.enableDamping = true
+/**
+ * Renderer
+ */
+const renderer = new THREE.WebGLRenderer({
+    canvas: canvas
+})
+renderer.setClearColor( 'orange',.5);
+renderer.setSize(sizes.width, sizes.height)
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
+raycaster.setFromCamera(mouse, camera)
+
 $(canvas).click((e) => {
-    // console.log(portalGroup)
+    console.log(raycaster.ray.direction)
     e.preventDefault()
     e.stopPropagation()
-    putinHead.children[2].material = new THREE.MeshBasicMaterial({ color: "red" })
+    // putinHead.children[2].material = new THREE.MeshBasicMaterial({ color: "red" })
 
     // prigozhinBob.play()
     // putinBob.play()
@@ -298,66 +363,11 @@ $(canvas).click((e) => {
         console.log(putinTank)
         console.log("prig tank")
 
-        putinTank.play()
+        putinwheel.play()
 
     }
 
 })
-
-scene.background = RoomMap;
-/**
- * Lights
- */
-const ambientLight = new THREE.AmbientLight('orange', .5)
-scene.add(ambientLight)
-const directionalLight = new THREE.DirectionalLight('#F5F5DC', 2)
-directionalLight.castShadow = true
-directionalLight.shadow.mapSize.set(1024, 1024)
-directionalLight.shadow.camera.far = 15
-directionalLight.shadow.camera.left = - 7
-directionalLight.shadow.camera.top = 7
-directionalLight.shadow.camera.right = 7
-directionalLight.shadow.camera.bottom = - 7
-directionalLight.position.set(- 5, 5, 0)
-scene.add(directionalLight)
-const directionalLight2 = new THREE.DirectionalLight('#5F9EA0', 1)
-directionalLight2.castShadow = true
-directionalLight2.shadow.mapSize.set(1024, 1024)
-directionalLight2.shadow.camera.far = 15
-directionalLight2.shadow.camera.left = - 7
-directionalLight2.shadow.camera.top = 7
-directionalLight2.shadow.camera.right = 7
-directionalLight2.shadow.camera.bottom = - 7
-directionalLight2.position.set(5, 5, 0)
-scene.add(directionalLight2)
-
-const camera = new THREE.PerspectiveCamera(75, sizes.width / sizes.height, 0.1, 100)
-camera.focus=20
-if(sizes.width>860){
-camera.position.set(7, 5, 0)
-}
-else if (sizes.width>450){
-    camera.position.set(7,3,0)
-}
-else{
-    camera.position.set(9, 4, 0)
-}
-scene.add(camera)
-// Controls
-const controls = new OrbitControls(camera, canvas)
-// controls.target.set(4, 2, 0)
-controls.enableDamping = true
-/**
- * Renderer
- */
-const renderer = new THREE.WebGLRenderer({
-    canvas: canvas
-})
-renderer.setClearColor( 'orange',.5);
-renderer.setSize(sizes.width, sizes.height)
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
-raycaster.setFromCamera(mouse, camera)
-
 /**
  * Animate
  */
@@ -372,6 +382,8 @@ const tick = () =>
     const elapsedTime = clock.getElapsedTime()
     const deltaTime = elapsedTime - oldElapsedTime
     oldElapsedTime = elapsedTime
+    raycaster.ray.origin.z =0;
+    raycaster.setFromCamera(mouse, camera)
 
     
     for(const object of objectsToUpdate)
@@ -391,22 +403,22 @@ const tick = () =>
 
     if (prigozhinHead != null){
         
-        prigozhinHeadIntersect = raycaster.intersectObjects(prigozhinHead.children[2])
+        prigozhinHeadIntersect = raycaster.intersectObject(prigozhinHead,true)
         
     }
     if (putinHead != null){
-        putinHeadIntersect = raycaster.intersectObject(putinHead.children[2])
+        putinHeadIntersect = raycaster.intersectObject(putinHead,true)
         }
     if (prigozhinTank != null)
     {
-        prigozhinTankIntersect = raycaster.intersectObject(prigozhinTank)
+        prigozhinTankIntersect = raycaster.intersectObject(prigozhinTank,true)
         // prigozhinTank.material=new THREE.MeshBasicMaterial({color:"blue"})
 
     }
 
     if(putinTank != null){
 
-        putinTankIntersect = raycaster.intersectObject(putinTank)
+        putinTankIntersect = raycaster.intersectObject(putinTank,true)
         if(putinTankIntersect.length>0){
             // putinTank.material = new THREE.MeshBasicMaterial({ color: "blue" })
 
@@ -414,6 +426,16 @@ const tick = () =>
 
 
     }
+//     if(cube !=null){
+
+//         const intersectsBox = raycaster.intersectObjects(cube, true);
+
+//     if (intersectsBox.length > 0) {
+//         // Change the color of the intersected cube to red
+//         console.log(intersectsBox)
+//         cube.material.color.set(0xff0000);
+//     }
+// }
 
     
 
