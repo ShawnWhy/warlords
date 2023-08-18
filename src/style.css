@@ -124,23 +124,3 @@ a{
     text-decoration:none
 }
 
-.controller{
-
-
-}
-
-.controller div{
-        border-radius: 3px;
-            padding: 10px;
-            margin: 10px;
-            position: Absolute;
-            right: 1%;
-            top: 1%;
-
-}
-.controller div:hover{
-    background-color: white;
-    color: black
-
-
-}

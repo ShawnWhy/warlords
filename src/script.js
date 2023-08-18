@@ -180,6 +180,7 @@ const createBall = (radius, position) => {
     scene.add(mesh)
 
     // Cannon.js body
+
     const shape = new CANNON.Sphere(radius)
 
     const body = new CANNON.Body({
@@ -205,25 +206,41 @@ gltfLoader.load(
         putin=gltf.scene
         console.log("putin")
         console.log(putin)
-        // console.log(teaset)
         putin.scale.set(0.25, 0.25, 0.25)
         putin.rotation.y =  Math.PI * 0.5
-        putinMix = new THREE.AnimationMixer(putin)
         putinTank = putin.children[0].children[0].children[6]
         putinHead = putin.children[0].children[0].children[0].children[1].children[0]
         putinBall = putin.children[0].children[0].children[0].children[3]
+        putinMix = new THREE.AnimationMixer(putin)
+
+
         putinwheel = putinMix.clipAction(gltf.animations[2])
         putinBob = putinMix.clipAction(gltf.animations[3])
-        // console.log(putinHead)
-        // console.log(putinTank)
-        // console.log(putinBall)
-        // console.log(walk)
+
         putinwheel.timeScale = 5
         putinwheel.clampWhenFinished = false
 
         // putinwheel.play()
         // putinBob.play()
         scene.add(putin)
+        const shape = new CANNON.Box(new CANNON.Vec3(1,  0.5,  1))
+
+      
+
+
+        const body = new CANNON.Body({
+            mass: 4,
+            position: new CANNON.Vec3(0, 5, 0),
+            shape: shape,
+            material: defaultMaterial
+        })
+        // body.position.copy(position)
+        body.addEventListener('collide', playHitSound)
+
+        world.addBody(body)
+
+        // Save in objects
+        objectsToUpdate.push({ putin, body })
     }
 )
 
@@ -243,15 +260,9 @@ gltfLoader.load(
         prigozhinBall = prigozhin.children[0].children[0].children[0].children[2]
         prigozhinTank = prigozhin.children[0].children[0].children[8]
         prigozhinHead = prigozhin.children[0].children[0].children[0].children[0].children[0]
-        // console.log(prigozhinBall)
-        // console.log(prigozhinHead)
-        // console.log(prigozhinTank)
-        // console.log(walk)
+
         prigozhWheel.timeScale = 5
         prigozhWheel.clampWhenFinished = false
-            // prigozhWheel.play()
-
-        // prigozhinBob.play()
 
         prigozhin.scale.set(0.25, 0.25, 0.25)
         scene.add(prigozhin)
@@ -340,7 +351,10 @@ $(canvas).click((e) => {
     if (prigozhinHeadIntersect.length > 0) {
         console.log(prigozhinHead)
         console.log("prig head")
-        prigozhinBob.play()
+        prigozhinBob.setLoop(THREE.LoopOnce);
+        prigozhinBob.clampWhenFinished = true;
+        prigozhinBob.reset().play()
+       
 
     }
     if (prigozhinTankIntersect.length > 0) {
@@ -355,8 +369,10 @@ $(canvas).click((e) => {
 
 
         console.log("putin head")
-
-        putinBob.play()
+        putinBob.setLoop(THREE.LoopOnce);
+        putinBob.clampWhenFinished = true;
+        
+        putinBob.reset().play()
 
     }
     if (putinTankIntersect.length > 0) {
@@ -368,6 +384,20 @@ $(canvas).click((e) => {
     }
 
 })
+const floorShape = new CANNON.Plane()
+
+const floorBody = new CANNON.Body()
+floorBody.mass = 0
+floorBody.quaternion.setFromAxisAngle(
+    new CANNON.Vec3(-1, 0, 0),
+    Math.PI * 0.5
+)
+floorBody.position.y = -.5
+floorBody.addShape(floorShape)
+floorBody.material = defaultMaterial
+world.addBody(floorBody)
+world.addContactMaterial(defaultContactMaterial)
+
 /**
  * Animate
  */
@@ -388,8 +418,8 @@ const tick = () =>
     
     for(const object of objectsToUpdate)
     {
-        object.mesh.position.copy(object.body.position)
-        object.mesh.quaternion.copy(object.body.quaternion)
+        object.putin.position.copy(object.body.position)
+        object.putin.quaternion.copy(object.body.quaternion)
         // object.body.applyForce(new CANNON.Vec3(- 10, 0, 0), object.body.position)
     }
     if(prigozhinMix)
@@ -442,6 +472,8 @@ const tick = () =>
     
     controls.update()
     renderer.render(scene, camera)
+    world.step(1 / 60, deltaTime, 3)
+
     // effectComposer.render(scene, camera)
 
     // Call tick again on the next frame
