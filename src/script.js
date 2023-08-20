@@ -39,6 +39,21 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js'
 import {SphereGeometry, TextureLoader , CubeTextureLoader} from 'three'
 import $ from "./Jquery"
 import gsap from "gsap";
+
+// 1. First, make sure you have GSAP properly integrated into your project.Refer to the GSAP documentation for installation instructions.
+
+// 2. Assuming you have a Cannon.js body called "body" and a target position called "targetPosition," you can use GSAP's `to` method to smoothly animate the body's position to the target.
+
+// ```javascript
+// // Assuming you have a Cannon.js body object called "body" and a target position called "targetPosition"
+
+// // Use GSAP to animate the body's position
+// gsap.to(body.position, { x: targetPosition.x, y: targetPosition.y, z: targetPosition.z, duration: 1 });
+
+
+
+
+
 import CANNON, { Sphere } from 'cannon'
 // import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js'
 // import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
@@ -81,6 +96,7 @@ const scene = new THREE.Scene()
 //raycaster
 const raycaster = new THREE.Raycaster()
 const objectsToUpdate = []
+const ballsToUpdate = []
 
 /**
  * Sizes
@@ -144,10 +160,10 @@ let prigozhinBall;
 let putinBall;
 let prigozhinTank;
 let putinTank;
-let prigozhinHeadIntersect;
-let putinHeadIntersect;
-let prigozhinTankIntersect;
-let putinTankIntersect;
+let prigozhinHeadIntersect = [];
+let putinHeadIntersect = [];
+let prigozhinTankIntersect = [];
+let putinTankIntersect = [];
 // const material = new THREE.MeshBasicMaterial({ color: "blue" });
 
 // const geometry = new THREE.BoxGeometry(1, 1, 1);
@@ -158,7 +174,8 @@ let putinTankIntersect;
 // // Add the cube to the scene
 // scene.add(cube);
 
-const createBall = (radius, position) => {
+const createBall = (radius, position, worldRotation, warlord) => {
+    console.log(position)
     const spherecolor = function getRandomColor() {
         var letters = '0123456789ABCDEF';
         var color = '#';
@@ -172,8 +189,9 @@ const createBall = (radius, position) => {
     const sphereMaterial = new THREE.MeshStandardMaterial({ emissive: spherecolor() })
 
     // Three.js mesh
+    const sphereGeometry = new THREE.SphereGeometry(radius, 8, 8);
 
-    const mesh = new THREE.Mesh(star, sphereMaterial)
+    const mesh = new THREE.Mesh(sphereGeometry, sphereMaterial)
     mesh.scale.set(radius, radius, radius)
     mesh.rotation.y = Math.PI * .5
     mesh.position.copy(position)
@@ -190,13 +208,38 @@ const createBall = (radius, position) => {
         material: defaultMaterial
     })
     body.position.copy(position)
-    body.applyForce(new CANNON.Vec3(- 2000, -500, 0), body.position)
+
+    // Assuming you have a body object called "body" and a rotation angle in radians called "rotationAngle"
+
+    // Calculate the force vector
+     // Example force vector
+    if (warlord == "putin") {
+        var force = new CANNON.Vec3(0, 0, -500);
+    }
+    else{
+        var force = new CANNON.Vec3(0, 0, 500);
+    }
+    // var offset = new CANNON.Vec3(0, 0, 0); // Example offset vector
+
+    // Apply the world rotation quaternion to the force vector
+   
+    var cannonQuaternion = new CANNON.Quaternion().setFromEuler(worldRotation.x, worldRotation.y, worldRotation.z, 'XYZ');
+    console.log(worldRotation)
+    console.log(cannonQuaternion)
+    const resultVector = new CANNON.Vec3();
+
+    cannonQuaternion.vmult(force, resultVector);
+    console.log(resultVector);
+   
+    // Apply the force to the body
+    body.applyForce(resultVector, body.position);
+    // body.applyForce(new CANNON.Vec3(- 2000, -500, 0), body.position)
     body.addEventListener('collide', playHitSound)
 
     world.addBody(body)
 
     // Save in objects
-    objectsToUpdate.push({ mesh, body })
+    ballsToUpdate.push({ mesh, body })
 }
 
 gltfLoader.load(
@@ -207,7 +250,9 @@ gltfLoader.load(
         console.log("putin")
         console.log(putin)
         putin.scale.set(0.25, 0.25, 0.25)
-        putin.rotation.y =  Math.PI * 0.5
+        // putin.rotation.y = Math.PI*1.5
+
+        // putin.rotation.y =  Math.PI * 0.5
         putinTank = putin.children[0].children[0].children[6]
         putinHead = putin.children[0].children[0].children[0].children[1].children[0]
         putinBall = putin.children[0].children[0].children[0].children[3]
@@ -223,17 +268,14 @@ gltfLoader.load(
         // putinwheel.play()
         // putinBob.play()
         scene.add(putin)
-        const shape = new CANNON.Box(new CANNON.Vec3(1,  0.5,  1))
-
-      
-
-
+        const shape = new CANNON.Box(new CANNON.Vec3(.1,  0.05,  .1))
         const body = new CANNON.Body({
             mass: 4,
-            position: new CANNON.Vec3(0, 5, 0),
+            position: new CANNON.Vec3(15, 5, 15),
             shape: shape,
             material: defaultMaterial
         })
+
         // body.position.copy(position)
         body.addEventListener('collide', playHitSound)
 
@@ -282,7 +324,14 @@ const RoomMap = cubeTextureLoader.load([
     './nz.png'
 ])
 
-
+const floorMesh = new THREE.Mesh(
+    new THREE.PlaneGeometry(1000, 1000),
+    new THREE.MeshBasicMaterial({color:"gray"})
+)
+floorMesh.receiveShadow = true
+floorMesh.rotation.x = - Math.PI * 0.5
+floorMesh.position.y = -.5
+scene.add(floorMesh)
 
 scene.background = RoomMap;
 /**
@@ -354,6 +403,15 @@ $(canvas).click((e) => {
         prigozhinBob.setLoop(THREE.LoopOnce);
         prigozhinBob.clampWhenFinished = true;
         prigozhinBob.reset().play()
+        const worldPosition = new THREE.Vector3();
+        prigozhinBall.getWorldPosition(worldPosition);
+        console.log(worldPosition);
+        prigozhin.updateMatrixWorld();
+        var worldRotation = new THREE.Euler().setFromQuaternion(prigozhin.quaternion, 'XYZ');
+        setTimeout(() => {
+            createBall(.2, worldPosition, worldRotation, "prig")
+
+        }, 1000);
        
 
     }
@@ -373,9 +431,28 @@ $(canvas).click((e) => {
         putinBob.clampWhenFinished = true;
         
         putinBob.reset().play()
+        const worldPosition = new THREE.Vector3();
+        putinBall.getWorldPosition(worldPosition);
+        console.log(worldPosition);
+        putin.children[0].updateMatrixWorld();
+        var worldRotation = new THREE.Euler().setFromQuaternion(putin.children[0].quaternion, 'XYZ');
+        // var worldRotation = putin.quaternion
+        setTimeout(() => {
+            createBall(.3, worldPosition, worldRotation, "putin")
+
+        }, 1000);
 
     }
     if (putinTankIntersect.length > 0) {
+        const newQuaternion = new CANNON.Quaternion();
+
+        newQuaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), 30);
+        
+        for (const object of objectsToUpdate) {
+            object.body.quaternion.mult(newQuaternion, object.body.quaternion);
+
+            // object.body.applyForce(new CANNON.Vec3(- 10, 0, 0), object.body.position)
+        }
         console.log(putinTank)
         console.log("prig tank")
 
@@ -392,7 +469,7 @@ floorBody.quaternion.setFromAxisAngle(
     new CANNON.Vec3(-1, 0, 0),
     Math.PI * 0.5
 )
-floorBody.position.y = -.5
+floorBody.position.y = -2
 floorBody.addShape(floorShape)
 floorBody.material = defaultMaterial
 world.addBody(floorBody)
@@ -418,8 +495,16 @@ const tick = () =>
     
     for(const object of objectsToUpdate)
     {
-        object.putin.position.copy(object.body.position)
-        object.putin.quaternion.copy(object.body.quaternion)
+        object.putin.children[0].position.copy(object.body.position)
+        object.putin.children[0].position.y -= 5.1
+        // object.putin.children[0].position.z += 2
+
+        object.putin.children[0].quaternion.copy(object.body.quaternion)
+        // object.body.applyForce(new CANNON.Vec3(- 10, 0, 0), object.body.position)
+    }
+    for (const object of ballsToUpdate) {
+        object.mesh.position.copy(object.body.position)
+        object.mesh.quaternion.copy(object.body.quaternion)
         // object.body.applyForce(new CANNON.Vec3(- 10, 0, 0), object.body.position)
     }
     if(prigozhinMix)
@@ -473,6 +558,8 @@ const tick = () =>
     controls.update()
     renderer.render(scene, camera)
     world.step(1 / 60, deltaTime, 3)
+    floorMesh.position.copy(floorBody.position)
+    floorMesh.quaternion.copy(floorBody.quaternion)
 
     // effectComposer.render(scene, camera)
 
