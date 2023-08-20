@@ -84,7 +84,7 @@ const playHitSound = (collision) => {
     if (impactStrength > 10) {
         audioHit.volume = Math.random()
         audioHit.currentTime = 0
-        audioHit.play()
+        // audioHit.play()
     }
 }
 
@@ -204,7 +204,8 @@ const createBall = (radius, position, worldRotation, warlord) => {
     const shape = new CANNON.Sphere(radius)
 
     const body = new CANNON.Body({
-        mass: radius,
+        // mass: radius,
+        mass: 50,
         position: new CANNON.Vec3(0, 5, 0),
         shape: shape,
         material: defaultMaterial
@@ -216,10 +217,10 @@ const createBall = (radius, position, worldRotation, warlord) => {
     // Calculate the force vector
      // Example force vector
     if (warlord == "putin") {
-        var force = new CANNON.Vec3(0, 0, -500);
+        var force = new CANNON.Vec3(0, 0, -50000);
     }
     else{
-        var force = new CANNON.Vec3(0, 0, 500);
+        var force = new CANNON.Vec3(0, 0, 50000);
     }
     // var offset = new CANNON.Vec3(0, 0, 0); // Example offset vector
 
@@ -268,7 +269,7 @@ gltfLoader.load(
         // putinwheel.play()
         // putinBob.play()
         scene.add(putin)
-        const shape = new CANNON.Box(new CANNON.Vec3(.5,  0.1,  .5))
+        const shape = new CANNON.Box(new CANNON.Vec3(1,  0.5,  1))
         const body = new CANNON.Body({
             mass: 4,
             position: new CANNON.Vec3(15, 5, 15),
@@ -309,7 +310,7 @@ gltfLoader.load(
         prigozhin.scale.set(0.25, 0.25, 0.25)
         scene.add(prigozhin)
 
-        const shape = new CANNON.Box(new CANNON.Vec3(.5, 0.1, .5))
+        const shape = new CANNON.Box(new CANNON.Vec3(5, 4, 5))
         const body = new CANNON.Body({
             mass: 4,
             position: new CANNON.Vec3(-15, 5, -15),
@@ -498,6 +499,8 @@ $(canvas).click((e) => {
         console.log("prig tank")
 
         prigozhWheel.play()
+        // gsap.to(body.position, { x: targetPosition.x, y: targetPosition.y, z: targetPosition.z, duration: 1 });
+
 
 
     }
