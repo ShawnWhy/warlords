@@ -96,6 +96,8 @@ const scene = new THREE.Scene()
 //raycaster
 const raycaster = new THREE.Raycaster()
 const objectsToUpdate = []
+const objectsToUpdate2 = []
+
 const ballsToUpdate = []
 
 /**
@@ -250,9 +252,7 @@ gltfLoader.load(
         console.log("putin")
         console.log(putin)
         putin.scale.set(0.25, 0.25, 0.25)
-        // putin.rotation.y = Math.PI*1.5
 
-        // putin.rotation.y =  Math.PI * 0.5
         putinTank = putin.children[0].children[0].children[6]
         putinHead = putin.children[0].children[0].children[0].children[1].children[0]
         putinBall = putin.children[0].children[0].children[0].children[3]
@@ -308,6 +308,23 @@ gltfLoader.load(
 
         prigozhin.scale.set(0.25, 0.25, 0.25)
         scene.add(prigozhin)
+
+        const shape = new CANNON.Box(new CANNON.Vec3(.1, 0.05, .1))
+        const body = new CANNON.Body({
+            mass: 4,
+            position: new CANNON.Vec3(-15, 5, -15),
+            shape: shape,
+            material: defaultMaterial
+        })
+
+        // body.position.copy(position)
+        body.addEventListener('collide', playHitSound)
+
+        world.addBody(body)
+
+
+        objectsToUpdate2.push({ prigozhin, body })
+
 
     }
 )
@@ -411,7 +428,7 @@ $(canvas).click((e) => {
         setTimeout(() => {
             createBall(.2, worldPosition, worldRotation, "prig")
 
-        }, 1000);
+        }, 1400);
        
 
     }
@@ -421,6 +438,16 @@ $(canvas).click((e) => {
         console.log("prig tank")
 
         prigozhWheel.play()
+
+        const newQuaternion = new CANNON.Quaternion();
+
+        newQuaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), 30);
+
+        for (const object of objectsToUpdate2) {
+            object.body.quaternion.mult(newQuaternion, object.body.quaternion);
+
+            // object.body.applyForce(new CANNON.Vec3(- 10, 0, 0), object.body.position)
+        }
 
     }
     if (putinHeadIntersect.length > 0) {
@@ -500,6 +527,14 @@ const tick = () =>
         // object.putin.children[0].position.z += 2
 
         object.putin.children[0].quaternion.copy(object.body.quaternion)
+        // object.body.applyForce(new CANNON.Vec3(- 10, 0, 0), object.body.position)
+    }
+    for (const object of objectsToUpdate2) {
+        object.prigozhin.children[0].position.copy(object.body.position)
+        object.prigozhin.children[0].position.y -= 5
+        // object.putin.children[0].position.z += 2
+
+        object.prigozhin.children[0].quaternion.copy(object.body.quaternion)
         // object.body.applyForce(new CANNON.Vec3(- 10, 0, 0), object.body.position)
     }
     for (const object of ballsToUpdate) {
