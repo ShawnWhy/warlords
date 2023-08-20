@@ -268,7 +268,7 @@ gltfLoader.load(
         // putinwheel.play()
         // putinBob.play()
         scene.add(putin)
-        const shape = new CANNON.Box(new CANNON.Vec3(.1,  0.05,  .1))
+        const shape = new CANNON.Box(new CANNON.Vec3(.5,  0.1,  .5))
         const body = new CANNON.Body({
             mass: 4,
             position: new CANNON.Vec3(15, 5, 15),
@@ -293,7 +293,7 @@ gltfLoader.load(
         console.log("prigozhin")
         console.log(prigozhin);
         // console.log(teaset)
-        prigozhin.rotation.y = Math.PI * 0.5
+        // prigozhin.rotation.y = Math.PI * 0.5
         prigozhinMix = new THREE.AnimationMixer(prigozhin)
         // console.log(mixer)
         prigozhWheel = prigozhinMix.clipAction(gltf.animations[2])
@@ -309,7 +309,7 @@ gltfLoader.load(
         prigozhin.scale.set(0.25, 0.25, 0.25)
         scene.add(prigozhin)
 
-        const shape = new CANNON.Box(new CANNON.Vec3(.1, 0.05, .1))
+        const shape = new CANNON.Box(new CANNON.Vec3(.5, 0.1, .5))
         const body = new CANNON.Body({
             mass: 4,
             position: new CANNON.Vec3(-15, 5, -15),
@@ -404,6 +404,65 @@ renderer.setSize(sizes.width, sizes.height)
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2))
 raycaster.setFromCamera(mouse, camera)
 
+
+
+let isDraggingPrig = false;
+let isDraggingPutin = false;
+
+
+// add dragging
+var prigozhinRotate = document.getElementById("prigRotate")
+var putinRotate = document.getElementById("putinRotate")
+prigozhinRotate.addEventListener("mousedown", (event) => {
+  isDraggingPrig = true;
+
+});
+prigozhinRotate.addEventListener("mousemove", (event) => {
+  if (!isDraggingPrig) return;
+
+  event.preventDefault();
+  
+        const newQuaternion = new CANNON.Quaternion();
+
+        newQuaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), .1);
+
+        for (const object of objectsToUpdate2) {
+            object.body.quaternion.mult(newQuaternion, object.body.quaternion);
+
+            // object.body.applyForce(new CANNON.Vec3(- 10, 0, 0), object.body.position)
+        }
+ })
+
+ //Putin rotate
+prigozhinRotate.addEventListener("mouseup", () => {
+  isDraggingPrig = false;
+});
+
+
+
+putinRotate.addEventListener("mousedown", (event) => {
+    isDraggingPutin = true;
+
+});
+putinRotate.addEventListener("mousemove", (event) => {
+    if (!isDraggingPutin) return;
+
+    event.preventDefault();
+
+    const newQuaternion = new CANNON.Quaternion();
+
+    newQuaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), .1);
+
+    for (const object of objectsToUpdate) {
+        object.body.quaternion.mult(newQuaternion, object.body.quaternion);
+
+        // object.body.applyForce(new CANNON.Vec3(- 10, 0, 0), object.body.position)
+    }
+})
+putinRotate.addEventListener("mouseup", () => {
+    isDraggingPutin = false;
+});
+
 $(canvas).click((e) => {
     console.log(raycaster.ray.direction)
     e.preventDefault()
@@ -423,8 +482,8 @@ $(canvas).click((e) => {
         const worldPosition = new THREE.Vector3();
         prigozhinBall.getWorldPosition(worldPosition);
         console.log(worldPosition);
-        prigozhin.updateMatrixWorld();
-        var worldRotation = new THREE.Euler().setFromQuaternion(prigozhin.quaternion, 'XYZ');
+        prigozhin.children[0].updateMatrixWorld();
+        var worldRotation = new THREE.Euler().setFromQuaternion(prigozhin.children[0].quaternion, 'XYZ');
         setTimeout(() => {
             createBall(.2, worldPosition, worldRotation, "prig")
 
@@ -432,6 +491,7 @@ $(canvas).click((e) => {
        
 
     }
+    
     if (prigozhinTankIntersect.length > 0) {
         console.log(prigozhinTank)
 
@@ -439,15 +499,6 @@ $(canvas).click((e) => {
 
         prigozhWheel.play()
 
-        const newQuaternion = new CANNON.Quaternion();
-
-        newQuaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), 30);
-
-        for (const object of objectsToUpdate2) {
-            object.body.quaternion.mult(newQuaternion, object.body.quaternion);
-
-            // object.body.applyForce(new CANNON.Vec3(- 10, 0, 0), object.body.position)
-        }
 
     }
     if (putinHeadIntersect.length > 0) {
@@ -471,15 +522,7 @@ $(canvas).click((e) => {
 
     }
     if (putinTankIntersect.length > 0) {
-        const newQuaternion = new CANNON.Quaternion();
 
-        newQuaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), 30);
-        
-        for (const object of objectsToUpdate) {
-            object.body.quaternion.mult(newQuaternion, object.body.quaternion);
-
-            // object.body.applyForce(new CANNON.Vec3(- 10, 0, 0), object.body.position)
-        }
         console.log(putinTank)
         console.log("prig tank")
 
