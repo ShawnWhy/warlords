@@ -40,6 +40,27 @@ import {SphereGeometry, TextureLoader , CubeTextureLoader} from 'three'
 import $ from "./Jquery"
 import gsap from "gsap";
 
+
+function rotateBodySmoothly(body) {
+    const rotationIncrement = 1; // You can adjust this value to control the rotation speed
+
+    const currentRotation = new CANNON.Vec3();
+    body.quaternion.toEuler(currentRotation);
+
+    // Convert the angle from radians to degrees and ensure it's within the valid range
+    let currentRotationDegrees = THREE.MathUtils.radToDeg(currentRotation.y) % 360;
+
+    // Add the rotation increment until it reaches 360 degrees and then switch to 0
+    currentRotationDegrees += rotationIncrement;
+    if (currentRotationDegrees >= 360) {
+        currentRotationDegrees = 0;
+    }
+
+    const newRotationRadians = THREE.MathUtils.degToRad(currentRotationDegrees);
+    const newQuaternion = new CANNON.Quaternion().setFromEuler(0, newRotationRadians, 0, 'XYZ');
+    body.quaternion.set(newQuaternion.x, newQuaternion.y, newQuaternion.z, newQuaternion.w);
+}
+
 // 1. First, make sure you have GSAP properly integrated into your project.Refer to the GSAP documentation for installation instructions.
 
 // 2. Assuming you have a Cannon.js body called "body" and a target position called "targetPosition," you can use GSAP's `to` method to smoothly animate the body's position to the target.
@@ -54,7 +75,9 @@ import gsap from "gsap";
 
 
 
-import CANNON, { Sphere } from 'cannon'
+import CANNON, { Sphere, Euler } from 'cannon'
+console.log("euler")
+console.log(Euler);
 // import { EffectComposer } from 'three/examples/jsm/postprocessing/EffectComposer.js'
 // import { RenderPass } from 'three/examples/jsm/postprocessing/RenderPass.js'
 // cannon physics
@@ -155,7 +178,6 @@ let prigozhWheel = null;
 let putinwheel = null;
 let putin = null;
 let prigozhin = null;
-
 let prigozhinHead;
 let putinHead;
 let prigozhinBall;
@@ -167,12 +189,9 @@ let putinHeadIntersect = [];
 let prigozhinTankIntersect = [];
 let putinTankIntersect = [];
 // const material = new THREE.MeshBasicMaterial({ color: "blue" });
-
 // const geometry = new THREE.BoxGeometry(1, 1, 1);
-
 // // Create a cube mesh with the geometry and material
 // const cube = new THREE.Mesh(geometry, material);
-
 // // Add the cube to the scene
 // scene.add(cube);
 
@@ -189,10 +208,8 @@ const createBall = (radius, position, worldRotation, warlord) => {
 
     console.log("fire")
     const sphereMaterial = new THREE.MeshStandardMaterial({ emissive: spherecolor() })
-
     // Three.js mesh
     const sphereGeometry = new THREE.SphereGeometry(radius, 8, 8);
-
     const mesh = new THREE.Mesh(sphereGeometry, sphereMaterial)
     mesh.scale.set(radius, radius, radius)
     mesh.rotation.y = Math.PI * .5
@@ -423,12 +440,11 @@ prigozhinRotate.addEventListener("mousemove", (event) => {
 
   event.preventDefault();
   
-        const newQuaternion = new CANNON.Quaternion();
-
-        newQuaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), .1);
 
         for (const object of objectsToUpdate2) {
-            object.body.quaternion.mult(newQuaternion, object.body.quaternion);
+            // object.body.quaternion.mult(newQuaternion, object.body.quaternion);
+
+            rotateBodySmoothly(object.body)
 
             // object.body.applyForce(new CANNON.Vec3(- 10, 0, 0), object.body.position)
         }
@@ -450,12 +466,15 @@ putinRotate.addEventListener("mousemove", (event) => {
 
     event.preventDefault();
 
-    const newQuaternion = new CANNON.Quaternion();
-
-    newQuaternion.setFromAxisAngle(new CANNON.Vec3(0, 1, 0), .1);
 
     for (const object of objectsToUpdate) {
-        object.body.quaternion.mult(newQuaternion, object.body.quaternion);
+        
+            // object.body.quaternion.mult(newQuaternion, object.body.quaternion);
+
+            rotateBodySmoothly(object.body)
+
+            // object.body.applyForce(new CANNON.Vec3(- 10, 0, 0), object.body.position)
+        
 
         // object.body.applyForce(new CANNON.Vec3(- 10, 0, 0), object.body.position)
     }
@@ -497,9 +516,100 @@ $(canvas).click((e) => {
         console.log(prigozhinTank)
 
         console.log("prig tank")
+        for (const object of objectsToUpdate2) {
+
+            const quaternion = object.prigozhin.children[0].rotation;
+            // const euler = new CANNON.Vec3( )
+            // var euler = new Euler();
+            // quaternion.toEuler(euler);
+            // console.log(euler)
+            // const yRotation = euler.z;
+            // const yRotationDegrees = yRotation * (180 / Math.PI)
+            console.log(quaternion)
+
+            console.log(quaternion.y)
+            console.log(quaternion.x)
+            console.log(quaternion.z)
+            const yRotationDegrees = quaternion.y
+            // var yRotationDegrees = THREE.Math.radToDeg(quaternion.y)
+            // const yRotationDegrees = quaternion.y * (180 / Math.PI)
+
+          
+            if (quaternion.x < -3 && quaternion.y>0){
+                console.log("negative")
+                forwardVectorZ = Math.cos(yRotationDegrees)*-1
+                forwardVectorX = Math.sin(yRotationDegrees);
+
+            }
+            else if (quaternion.x > 3 && quaternion.y < 0){
+                forwardVectorZ = Math.cos(yRotationDegrees) * -1 
+                forwardVectorX = Math.sin(yRotationDegrees);
+
+            }
+            else{
+                var forwardVectorX = Math.sin(yRotationDegrees);
+                var forwardVectorZ = Math.cos(yRotationDegrees);
+
+            }
+  
+            // console.log(yRotationDegrees)
+            console.log(forwardVectorX)
+            console.log(forwardVectorZ)
+
+            // gsap.set(object.body.position, {
+            //   x: forwardVectorX+10,
+            //   z: forwardVectorZ+10,
+            // });
+            gsap.to(object.body.position, { 
+                x: object.body.position.x + forwardVectorX*10 , 
+                z: object.body.position.z + forwardVectorZ*10 , 
+                duration: 1 });
+
+
+//             To calculate a GSAP transform for a cannon.js body to always move forward based on its rotation, you can follow these revised steps:
+
+//             1. Get the quaternion rotation of the body using cannon.js API.
+//             2. Convert the quaternion rotation to Euler angles using cannon.js' `Quaternion` object's `toEuler()` method.
+// 3. Extract the y rotation angle from the Euler angles.
+// 4. Calculate the x and z components of the forward vector using trigonometry.
+//             5. Use GSAP to apply the transform to your cannon.js body using the x and z components calculated.
+
+//                 Here's the updated code snippet:
+
+//                     ```javascript
+// // Assuming cannonBody is your cannon.js body and gsap is available
+
+// // Step 1: Get the quaternion rotation
+
+// // Step 2: Convert quaternion rotation to Euler angles
+// const euler = new CANNON.Euler();
+// quaternion.toEuler(euler);
+
+// // Step 3: Extract the y rotation angle
+// const yRotation = euler.y;
+
+// // Step 4: Calculate forward vector
+// const forwardVectorX = Math.sin(yRotation);
+// const forwardVectorZ = Math.cos(yRotation);
+
+// // Step 5: Apply GSAP transform
+// gsap.set(cannonBody.position, {
+//   x: forwardVectorX,
+//   z: forwardVectorZ,
+// });
+// ```
+            // gsap.to(object.body.position, { z: object.body.position.z + 10, duration: 1 });
+
+
+            // object.body.applyForce(new CANNON.Vec3(0, 0, -50000), object.body.position)
+        }
+
 
         prigozhWheel.play()
-        // gsap.to(body.position, { x: targetPosition.x, y: targetPosition.y, z: targetPosition.z, duration: 1 });
+
+        
+
+ 
 
 
 
@@ -528,6 +638,94 @@ $(canvas).click((e) => {
 
         console.log(putinTank)
         console.log("prig tank")
+        for (const object of objectsToUpdate) {
+
+            const quaternion = object.putin.children[0].rotation;
+            // const euler = new CANNON.Vec3( )
+            // var euler = new Euler();
+            // quaternion.toEuler(euler);
+            // console.log(euler)
+            // const yRotation = euler.z;
+            // const yRotationDegrees = yRotation * (180 / Math.PI)
+            console.log(quaternion)
+
+            console.log(quaternion.y)
+            console.log(quaternion.x)
+            console.log(quaternion.z)
+            const yRotationDegrees = quaternion.y
+            // var yRotationDegrees = THREE.Math.radToDeg(quaternion.y)
+            // const yRotationDegrees = quaternion.y * (180 / Math.PI)
+
+
+            if (quaternion.x < -3 && quaternion.y > 0) {
+                console.log("negative")
+                forwardVectorZ = Math.cos(yRotationDegrees) * -1
+                forwardVectorX = Math.sin(yRotationDegrees);
+
+            }
+            else if (quaternion.x > 3 && quaternion.y < 0) {
+                forwardVectorZ = Math.cos(yRotationDegrees) * -1
+                forwardVectorX = Math.sin(yRotationDegrees);
+
+            }
+            else {
+                var forwardVectorX = Math.sin(yRotationDegrees);
+                var forwardVectorZ = Math.cos(yRotationDegrees);
+
+            }
+
+            // console.log(yRotationDegrees)
+            console.log(forwardVectorX)
+            console.log(forwardVectorZ)
+
+            // gsap.set(object.body.position, {
+            //   x: forwardVectorX+10,
+            //   z: forwardVectorZ+10,
+            // });
+            gsap.to(object.body.position, {
+                x: object.body.position.x - forwardVectorX * 10,
+                z: object.body.position.z - forwardVectorZ * 10,
+                duration: 1
+            });
+
+            //             To calculate a GSAP transform for a cannon.js body to always move forward based on its rotation, you can follow these revised steps:
+
+            //             1. Get the quaternion rotation of the body using cannon.js API.
+            //             2. Convert the quaternion rotation to Euler angles using cannon.js' `Quaternion` object's `toEuler()` method.
+            // 3. Extract the y rotation angle from the Euler angles.
+            // 4. Calculate the x and z components of the forward vector using trigonometry.
+            //             5. Use GSAP to apply the transform to your cannon.js body using the x and z components calculated.
+
+            //                 Here's the updated code snippet:
+
+            //                     ```javascript
+            // // Assuming cannonBody is your cannon.js body and gsap is available
+
+            // // Step 1: Get the quaternion rotation
+
+            // // Step 2: Convert quaternion rotation to Euler angles
+            // const euler = new CANNON.Euler();
+            // quaternion.toEuler(euler);
+
+            // // Step 3: Extract the y rotation angle
+            // const yRotation = euler.y;
+
+            // // Step 4: Calculate forward vector
+            // const forwardVectorX = Math.sin(yRotation);
+            // const forwardVectorZ = Math.cos(yRotation);
+
+            // // Step 5: Apply GSAP transform
+            // gsap.set(cannonBody.position, {
+            //   x: forwardVectorX,
+            //   z: forwardVectorZ,
+            // });
+            // ```
+            // gsap.to(object.body.position, { z: object.body.position.z + 10, duration: 1 });
+
+
+            // object.body.applyForce(new CANNON.Vec3(0, 0, -50000), object.body.position)
+        }
+
 
         putinwheel.play()
 
